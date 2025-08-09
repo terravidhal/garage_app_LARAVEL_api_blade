@@ -55,6 +55,7 @@ class VehiculeController extends Controller
     public function show(string $id)
     {
         //
+        $vehicule = Vehicule::findOrFail($id);
         return view('vehicules.show', compact('vehicule'));
     }
 
@@ -64,6 +65,7 @@ class VehiculeController extends Controller
     public function edit(string $id)
     {
         //
+        $vehicule = Vehicule::findOrFail($id);
         return view('vehicules.edit', compact('vehicule'));
     }
 

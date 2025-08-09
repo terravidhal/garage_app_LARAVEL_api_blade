@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Technicien;
 use Illuminate\Http\Request;
 
 class TechnicienController extends Controller
@@ -12,6 +13,8 @@ class TechnicienController extends Controller
     public function index()
     {
         //
+        $techniciens = Technicien::all();
+        return view('techniciens.index', compact('techniciens'));
     }
 
     /**
@@ -20,6 +23,7 @@ class TechnicienController extends Controller
     public function create()
     {
         //
+        return view('techniciens.create');
     }
 
     /**
@@ -28,6 +32,15 @@ class TechnicienController extends Controller
     public function store(Request $request)
     {
         //
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'specialite' => 'required|string|max:255',
+        ]);
+
+        Technicien::create($request->all());
+
+        return redirect()->route('techniciens.index')->with('success', 'Technicien ajouté.');
     }
 
     /**
@@ -36,6 +49,8 @@ class TechnicienController extends Controller
     public function show(string $id)
     {
         //
+        $technicien = Technicien::findOrFail($id);
+        return view('techniciens.show', compact('technicien'));
     }
 
     /**
@@ -44,6 +59,8 @@ class TechnicienController extends Controller
     public function edit(string $id)
     {
         //
+        $technicien = Technicien::findOrFail($id);
+        return view('techniciens.edit', compact('technicien'));
     }
 
     /**
@@ -52,6 +69,17 @@ class TechnicienController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $technicien = Technicien::findOrFail($id);
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'specialite' => 'required|string|max:255',
+        ]);
+
+        $technicien->update($request->all());
+
+        return redirect()->route('techniciens.index')->with('success', 'Technicien mis à jour.');
     }
 
     /**
@@ -60,5 +88,9 @@ class TechnicienController extends Controller
     public function destroy(string $id)
     {
         //
+        $technicien = Technicien::findOrFail($id);
+        $technicien->delete();
+
+        return redirect()->route('techniciens.index')->with('success', 'Technicien supprimé.');
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Reparation;
+use App\Models\Technicien;
+use App\Models\Vehicule;
 use Illuminate\Http\Request;
 
 class ReparationController extends Controller
@@ -12,6 +15,8 @@ class ReparationController extends Controller
     public function index()
     {
         //
+        $reparations = Reparation::with('vehicule', 'techniciens')->get();
+        return view('reparations.index', compact('reparations'));
     }
 
     /**
@@ -20,6 +25,9 @@ class ReparationController extends Controller
     public function create()
     {
         //
+        $vehicules = Vehicule::all();
+        $techniciens = Technicien::all();
+        return view('reparations.create', compact('vehicules', 'techniciens'));
     }
 
     /**
@@ -28,6 +36,18 @@ class ReparationController extends Controller
     public function store(Request $request)
     {
         //
+        $request->validate([
+            'vehicule_id' => 'required|exists:vehicules,id',
+            'date' => 'required|date',
+            'duree_main_oeuvre' => 'required|string',
+            'objet_reparation' => 'required|string',
+            'techniciens' => 'array',
+        ]);
+
+        $reparation = Reparation::create($request->only('vehicule_id', 'date', 'duree_main_oeuvre', 'objet_reparation'));
+        $reparation->techniciens()->sync($request->input('techniciens', []));
+
+        return redirect()->route('reparations.index')->with('success', 'Réparation enregistrée.');
     }
 
     /**
@@ -36,6 +56,12 @@ class ReparationController extends Controller
     public function show(string $id)
     {
         //
+        $reparation = Reparation::findOrFail($id);
+        $vehicules = Vehicule::all();
+        $techniciens = Technicien::all();
+        $selectedTechniciens = $reparation->techniciens->pluck('id')->toArray();
+
+        return view('reparations.show', compact('reparation', 'vehicules', 'techniciens', 'selectedTechniciens'));
     }
 
     /**
@@ -44,6 +70,12 @@ class ReparationController extends Controller
     public function edit(string $id)
     {
         //
+        $reparation = Reparation::findOrFail($id);
+        $vehicules = Vehicule::all();
+        $techniciens = Technicien::all();
+        $selectedTechniciens = $reparation->techniciens->pluck('id')->toArray();
+
+        return view('reparations.edit', compact('reparation', 'vehicules', 'techniciens', 'selectedTechniciens'));
     }
 
     /**
@@ -52,6 +84,20 @@ class ReparationController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $reparation = Reparation::findOrFail($id);
+
+        $request->validate([
+            'vehicule_id' => 'required|exists:vehicules,id',
+            'date' => 'required|date',
+            'duree_main_oeuvre' => 'required|string',
+            'objet_reparation' => 'required|string',
+            'techniciens' => 'array',
+        ]);
+
+        $reparation->update($request->only('vehicule_id', 'date', 'duree_main_oeuvre', 'objet_reparation'));
+        $reparation->techniciens()->sync($request->input('techniciens', []));
+
+        return redirect()->route('reparations.index')->with('success', 'Réparation mise à jour.');
     }
 
     /**
@@ -60,5 +106,10 @@ class ReparationController extends Controller
     public function destroy(string $id)
     {
         //
+        $reparation = Reparation::findOrFail($id);
+        $reparation->techniciens()->detach();
+        $reparation->delete();
+
+        return redirect()->route('reparations.index')->with('success', 'Réparation supprimée.');
     }
 }
